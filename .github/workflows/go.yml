@@ -25,17 +25,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-docker-
 
-      - name: Build Docker image
-        run: docker build -t moto ./plateforme-mys3 # Spécifiez ici le chemin du Dockerfile
+      - name: Build Docker image and run tests
+        run: docker build -t moto .
 
       - name: Run Docker container
         run: docker run -d --name moto-container moto
-
-      - name: Run tests in Docker container
-        run: |
-          # Ajoutez ici les commandes pour tester votre application
-          # Par exemple, des tests unitaires ou fonctionnels
-          docker exec moto-container /bin/sh -c "run-your-tests-command"
 
       - name: Stop and remove Docker container
         run: |
