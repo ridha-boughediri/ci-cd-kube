@@ -26,7 +26,7 @@ jobs:
             ${{ runner.os }}-docker-
 
       - name: Build Docker image and run tests
-        run: docker build -t moto .
+        run: docker build -t moto ./plateforme-mys3  # Spécifiez ici le bon chemin du Dockerfile
 
       - name: Run Docker container
         run: docker run -d --name moto-container moto
