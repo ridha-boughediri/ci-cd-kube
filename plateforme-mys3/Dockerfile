@@ -7,11 +7,14 @@ FROM golang:1.20-alpine AS builder
 WORKDIR /app
 
 # Copier uniquement les fichiers nécessaires pour éviter de copier trop de fichiers
-COPY go.mod go.sum ./
+COPY go.mod go.sum ./ 
 RUN go mod download
 
 # Copier le reste des fichiers du projet
 COPY . .
+
+# Exécuter les tests avant la compilation de l'application
+RUN go test ./cmd/... -v
 
 # Compiler l'application Go à partir du répertoire cmd
 RUN CGO_ENABLED=0 GOOS=linux go build -o myapp ./cmd
