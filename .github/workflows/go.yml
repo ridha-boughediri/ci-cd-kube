@@ -3,6 +3,8 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
   build:
@@ -12,28 +14,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up Go
-        uses: actions/setup-go@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
         with:
-          go-version: '1.20'
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-docker-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-docker-
 
-      - name: Build the application
-        run: go build -v ./...
+      - name: Build Docker image
+        run: docker build -t moto .
 
-      - name: Run tests
-        run: go test -v ./...
+      - name: Run Docker container
+        run: docker run -d --name moto-container moto
 
-  docker:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-
-      - name: Build and push Docker image
+      - name: Run tests in Docker container
         run: |
-          docker build -t your-image-name .
-          docker tag your-image-name your-docker-repo/your-image-name:latest
-          docker push your-docker-repo/your-image-name:latest
+          # Ajoutez ici les commandes pour tester votre application
+          # Par exemple, des tests unitaires ou fonctionnels
+          docker exec moto-container /bin/sh -c "run-your-tests-command"
+
+      - name: Stop and remove Docker container
+        run: |
+          docker stop moto-container
+          docker rm moto-container
+
+      - name: Push Docker image to Docker Hub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker tag moto your-dockerhub-username/moto:latest
+          docker push your-dockerhub-username/moto:latest
