@@ -37,9 +37,3 @@ jobs:
           docker build -t your-image-name .
           docker tag your-image-name your-docker-repo/your-image-name:latest
           docker push your-docker-repo/your-image-name:latest
-
-      - name: Notify Google Chat
-        uses: 360kelvin/chat-notifier@v2.2.0
-        with:
-          webhook-url: ${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}
-          message: 'Build and deployment succeeded for ${{ github.sha }}'
