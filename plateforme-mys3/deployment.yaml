@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moto-deployment
+  labels:
+    app: moto
+spec:
+  replicas: 2  # Nombre de pods
+  selector:
+    matchLabels:
+      app: moto
+  template:
+    metadata:
+      labels:
+        app: moto
+    spec:
+      containers:
+      - name: moto
+        image: ridhabucket/moto:latest  # Ton image Docker
+        ports:
+        - containerPort: 8080
