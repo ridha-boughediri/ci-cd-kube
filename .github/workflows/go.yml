@@ -25,15 +25,7 @@ jobs:
             ${{ runner.os }}-docker-
 
       - name: Build Docker image and run tests
-        run: docker build -t moto ./plateforme-mys3  # Spécifiez ici le bon chemin du Dockerfile
-
-      - name: Run Docker container
-        run: docker run -d --name moto-container moto
-
-      - name: Stop and remove Docker container
-        run: |
-          docker stop moto-container
-          docker rm moto-container
+        run: docker build -t your-dockerhub-username/plateforme-mys3 ./plateforme-mys3
 
       - name: Push Docker image to Docker Hub
         env:
@@ -41,5 +33,17 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker tag moto your-dockerhub-username/moto:latest
-          docker push your-dockerhub-username/moto:latest
+          docker tag your-dockerhub-username/plateforme-mys3:latest your-dockerhub-username/plateforme-mys3:${{ github.sha }}
+          docker push your-dockerhub-username/plateforme-mys3:${{ github.sha }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          version: 'v1.20.0'  # Remplace par la version kubectl de ton cluster
+
+      - name: Configure kubectl to access the cluster
+        run: |
+          echo "${{ secrets.KUBECONFIG }}" > $HOME/.kube/config
+          
+      - name: Deploy to Kubernetes
+        run: kubectl apply -f ./deployment.yaml
