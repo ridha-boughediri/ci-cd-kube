@@ -1,20 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: moto-deployment
-  # rajoute le  namespace 
-  labels:
-    app: moto
+  name: moto
 spec:
-  replicas: 2  # Nombre de pods
+  replicas: 3
   selector:
     matchLabels:
       app: moto
-
-      # strategy
-      # type: Rzcreate
-
-      # 
   template:
     metadata:
       labels:
@@ -22,6 +14,6 @@ spec:
     spec:
       containers:
       - name: moto
-        image: ridhabucket/moto:latest  # Ton image Docker
+        image: ridhabucket/moto:latest
         ports:
         - containerPort: 8080
