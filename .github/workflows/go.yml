@@ -31,15 +31,17 @@ jobs:
         working-directory: ./plateforme-mys3
         run: go test ./cmd/... -v
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
       - name: Build Docker image
         working-directory: ./plateforme-mys3
         run: |
           docker build -t ridhabucket/moto:${{ github.sha }} .
-          echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin --quiet
+          echo ${{ secrets.DOCKER_HUB_PASSWORD }} | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
           docker tag ridhabucket/moto:${{ github.sha }} ridhabucket/moto:latest
 
       - name: Push Docker image to Docker Hub
-        working-directory: ./plateforme-mys3
         run: |
           docker push ridhabucket/moto:${{ github.sha }}
           docker push ridhabucket/moto:latest
