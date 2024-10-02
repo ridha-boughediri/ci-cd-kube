@@ -40,13 +40,13 @@ jobs:
           docker push ridhabucket/moto:${{ github.sha }}
           docker push ridhabucket/moto:latest
 
-      - name: Send notification to Google Chat
-        if: always()
-        run: |
-          curl -X POST -H 'Content-Type: application/json' \
-          -d '{
-                "text": "Pipeline finished. Status: ${{ job.status }}\nCommit: ${{ github.sha }}\nBranch/Tag: ${{ github.ref_name }}"
-              }' ${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}
+      # - name: Send notification to Google Chat
+      #   if: always()
+      #   run: |
+      #     curl -X POST -H 'Content-Type: application/json' \
+      #     -d '{
+      #           "text": "Pipeline finished. Status: ${{ job.status }}\nCommit: ${{ github.sha }}\nBranch/Tag: ${{ github.ref_name }}"
+      #         }' ${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}
 
   deploy:
     needs: build
