@@ -33,11 +33,11 @@ func main() {
 
 		// Authentification désactivée (en commentaire)
 		/*
-			accessKey := r.Header.Get("Authorization")
-			if accessKey != "Bearer "+cfg.AccessKeyID {
-				http.Error(w, "Unauthorized", http.StatusUnauthorized)
-				return
-			}
+		accessKey := r.Header.Get("Authorization")
+		if accessKey != "Bearer "+cfg.AccessKeyID {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 		*/
 
 		switch r.Method {
@@ -59,6 +59,8 @@ func main() {
 			} else {
 				deleteObject(w, r, bucketName, objectName, cfg)
 			}
+		case http.MethodHead: // Ajout de la gestion de la méthode HEAD
+			w.WriteHeader(http.StatusOK)
 		default:
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
