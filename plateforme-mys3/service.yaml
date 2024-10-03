@@ -2,11 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: moto-service
-spec:
-  selector:
+  labels:
     app: moto
+spec:
+  type: LoadBalancer  # Utilise LoadBalancer pour exposer le service via une IP externe. Remplace par NodePort si nécessaire.
   ports:
-  - protocol: TCP
-    port: 80  # Port exposé
-    targetPort: 8080  # Port du container
-  type: LoadBalancer  # Utilise LoadBalancer pour exposer publiquement l'application
+    - port: 8080  # Le port sur lequel le service sera exposé
+      targetPort: 8080  # Le port sur lequel l'application écoute dans le pod
+      protocol: TCP
+  selector:
+    app: moto  # Cela doit correspondre aux labels du deployment pour que le service trouve les pods

@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: moto
+  name: moto-deployment
+  labels:
+    app: moto
 spec:
-  replicas: 3
+  replicas: 3  # Nombre de réplicas de l'application
   selector:
     matchLabels:
       app: moto
@@ -13,7 +15,15 @@ spec:
         app: moto
     spec:
       containers:
-      - name: moto
-        image: ridhabucket/moto:latest
+      - name: moto-container
+        image: ridhabucket/moto:latest  # Ton image Docker
         ports:
-        - containerPort: 8080
+        - containerPort: 8080  # Port exposé par l'application
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+      restartPolicy: Always
