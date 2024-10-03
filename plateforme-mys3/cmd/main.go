@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -19,7 +18,7 @@ func main() {
 	cfg := Config{
 		AccessKeyID:     "admin1234",
 		SecretAccessKey: "adminsecretkey12345678",
-		Region:          "us-east-1",
+		Region:          "eu-west-1", // Région européenne (ici, Irlande)
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -80,9 +79,8 @@ func main() {
 // Fonction pour authentifier les requêtes S3
 func authenticateRequest(r *http.Request, cfg Config) bool {
 	accessKey := r.Header.Get("Authorization")
-	// Normalement, ici, tu décomposerais l'en-tête Authorization et vérifierais la signature
-	// mais pour cette version simple, on vérifie juste si l'accès est correct.
-	return accessKey == "Bearer "+cfg.AccessKeyID // Simule une autorisation basée sur l'en-tête
+	// Simule une autorisation basée sur l'en-tête Authorization
+	return accessKey == "Bearer "+cfg.AccessKeyID
 }
 
 // Fonction pour gérer l'upload d'objets
@@ -105,7 +103,7 @@ func uploadObject(w http.ResponseWriter, r *http.Request, bucketName, objectName
 	defer file.Close()
 
 	// Copier le contenu du corps de la requête vers le fichier
-	_, err = io.Copy(file, r.Body)
+	_, err = file.ReadFrom(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to upload object", http.StatusInternalServerError)
 		return
