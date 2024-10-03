@@ -27,25 +27,34 @@ func main() {
 
 		log.Printf("Requête reçue: %s %s", r.Method, path)
 
-		if path == "" {
-			// Aucune partie de chemin -> liste des buckets
+		switch {
+		case path == "":
+			// Si le chemin est vide, liste des buckets
 			if r.Method == http.MethodGet {
 				listBuckets(w, r, cfg)
 			} else {
 				http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 			}
-			return
-		}
-
-		// Gérer les opérations sur un bucket spécifique
-		bucketName := strings.Split(path, "/")[0]
-		if r.Method == http.MethodPut {
-			createBucket(w, r, bucketName, cfg)
-		} else if r.Method == http.MethodGet && len(path) > len(bucketName) {
-			// Liste des objets dans un bucket
-			listObjectsInBucket(w, r, bucketName, cfg)
-		} else {
-			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		case path == "telescope/requests":
+			// Gérer la route spécifique /telescope/requests
+			handleTelescopeRequests(w, r)
+		case path == ".env":
+			// Gérer la route spécifique /.env
+			handleEnv(w, r)
+		case path == "favicon.ico":
+			// Gérer la route spécifique /favicon.ico
+			handleFavicon(w, r)
+		default:
+			// Gérer les buckets et objets S3
+			bucketName := strings.Split(path, "/")[0]
+			if r.Method == http.MethodPut {
+				createBucket(w, r, bucketName, cfg)
+			} else if r.Method == http.MethodGet && len(path) > len(bucketName) {
+				// Liste des objets dans un bucket
+				listObjectsInBucket(w, r, bucketName, cfg)
+			} else {
+				http.Error(w, "Not Found", http.StatusNotFound)
+			}
 		}
 	})
 
@@ -53,9 +62,26 @@ func main() {
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
+// Exemple de fonction pour /telescope/requests
+func handleTelescopeRequests(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Telescope requests handled."))
+}
+
+// Exemple de fonction pour /.env
+func handleEnv(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Env file handled."))
+}
+
+// Exemple de fonction pour /favicon.ico
+func handleFavicon(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Favicon handled."))
+}
+
 // Fonction pour lister les objets dans un bucket
 func listObjectsInBucket(w http.ResponseWriter, r *http.Request, bucketName string, cfg Config) {
-	// Vérifier si le bucket existe
 	bucketPath := "./data/" + bucketName
 	entries, err := os.ReadDir(bucketPath)
 	if err != nil {
@@ -68,7 +94,6 @@ func listObjectsInBucket(w http.ResponseWriter, r *http.Request, bucketName stri
 		return
 	}
 
-	// Construire une réponse XML pour les objets
 	w.Header().Set("Content-Type", "application/xml")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("<ListBucketResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"))
@@ -84,7 +109,6 @@ func listObjectsInBucket(w http.ResponseWriter, r *http.Request, bucketName stri
 
 // Fonction pour créer un bucket
 func createBucket(w http.ResponseWriter, r *http.Request, bucketName string, cfg Config) {
-	// Créer le répertoire pour le bucket
 	path := "./data/" + bucketName
 	err := os.Mkdir(path, 0755)
 	if err != nil {
@@ -111,7 +135,6 @@ func listBuckets(w http.ResponseWriter, r *http.Request, cfg Config) {
 		return
 	}
 
-	// Construire une réponse XML simple
 	w.Header().Set("Content-Type", "application/xml")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("<ListAllMyBucketsResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"))
