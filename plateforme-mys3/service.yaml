@@ -9,5 +9,5 @@ spec:
   ports:
     - protocol: TCP
       port: 9000        # Port interne au cluster
-      targetPort: 9000  # Port sur lequel vos pods écoutent
+      targetPort: 9000  # Port sur lequel les pods écoutent
       nodePort: 32000   # Port accessible depuis l'extérieur (choisissez entre 30000-32767)
