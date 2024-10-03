@@ -5,8 +5,8 @@ metadata:
 spec:
   selector:
     app: moto
-  type: LoadBalancer
+  type: LoadBalancer  # Or NodePort, depending on your setup
   ports:
     - protocol: TCP
-      port: 9000
-      targetPort: 9000
+      port: 9000        # Port accessible externally
+      targetPort: 9000  # Port on which your pod is listening
