@@ -33,13 +33,18 @@ func main() {
 		case http.MethodPut:
 			createBucket(w, r, bucketName, cfg)
 		case http.MethodGet:
-			listBuckets(w, r, cfg)
+			// Vérifier si c'est la liste des objets dans un bucket spécifique
+			if bucketName == "" {
+				listBuckets(w, r, cfg)
+			} else {
+				listObjectsInBucket(w, r, bucketName, cfg)
+			}
 		default:
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
-	log.Println("Serveur démarré sur le port 8000S")
+	log.Println("Serveur démarré sur le port 8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
@@ -67,7 +72,6 @@ func createBucket(w http.ResponseWriter, r *http.Request, bucketName string, cfg
 
 // Fonction pour lister les buckets
 func listBuckets(w http.ResponseWriter, r *http.Request, cfg Config) {
-	// Exemple simple sans authentification
 	dataDir := "./data/"
 	entries, err := os.ReadDir(dataDir)
 	if err != nil {
@@ -87,4 +91,33 @@ func listBuckets(w http.ResponseWriter, r *http.Request, cfg Config) {
 		}
 	}
 	w.Write([]byte("</Buckets></ListAllMyBucketsResult>"))
+}
+
+// Fonction pour lister les objets dans un bucket
+func listObjectsInBucket(w http.ResponseWriter, r *http.Request, bucketName string, cfg Config) {
+	// Vérifier si le bucket existe
+	bucketPath := "./data/" + bucketName
+	entries, err := os.ReadDir(bucketPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, "Bucket Not Found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Printf("Erreur lors de la lecture du bucket %s : %v", bucketName, err)
+		return
+	}
+
+	// Construire une réponse XML pour les objets
+	w.Header().Set("Content-Type", "application/xml")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("<ListBucketResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"))
+	w.Write([]byte("<Name>" + bucketName + "</Name>"))
+	w.Write([]byte("<Contents>"))
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			w.Write([]byte("<Object><Key>" + entry.Name() + "</Key></Object>"))
+		}
+	}
+	w.Write([]byte("</Contents></ListBucketResult>"))
 }
