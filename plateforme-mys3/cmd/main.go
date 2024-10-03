@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +12,7 @@ type Config struct {
 	AccessKeyID     string
 	SecretAccessKey string
 	Region          string
+	// autres configurations
 }
 
 // Fonction principale
@@ -18,93 +20,52 @@ func main() {
 	cfg := Config{
 		AccessKeyID:     "admin1234",
 		SecretAccessKey: "adminsecretkey12345678",
-		Region:          "us-east-1",
+		Region:          "eu-west-1", // Région européenne (Irlande)
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		// Normaliser le chemin
-		path := strings.TrimPrefix(strings.TrimSuffix(r.URL.Path, "/"), "/")
+		path := strings.TrimSuffix(r.URL.Path, "/")
+		bucketName := strings.Split(strings.TrimPrefix(path, "/"), "/")[0]
+		objectName := strings.TrimPrefix(path, bucketName+"/")
 
 		log.Printf("Requête reçue: %s %s", r.Method, path)
 
-		switch {
-		case path == "":
-			// Si le chemin est vide, liste des buckets
-			if r.Method == http.MethodGet {
+		// Authentification désactivée (en commentaire)
+		/*
+			accessKey := r.Header.Get("Authorization")
+			if accessKey != "Bearer "+cfg.AccessKeyID {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+		*/
+
+		switch r.Method {
+		case http.MethodPut:
+			if objectName == "" {
+				createBucket(w, r, bucketName, cfg)
+			} else {
+				uploadObject(w, r, bucketName, objectName, cfg)
+			}
+		case http.MethodGet:
+			if objectName == "" {
 				listBuckets(w, r, cfg)
 			} else {
-				http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+				downloadObject(w, r, bucketName, objectName, cfg)
 			}
-		case path == "telescope/requests":
-			// Gérer la route spécifique /telescope/requests
-			handleTelescopeRequests(w, r)
-		case path == ".env":
-			// Gérer la route spécifique /.env
-			handleEnv(w, r)
-		case path == "favicon.ico":
-			// Gérer la route spécifique /favicon.ico
-			handleFavicon(w, r)
-		default:
-			// Gérer les buckets et objets S3
-			bucketName := strings.Split(path, "/")[0]
-			if r.Method == http.MethodPut {
-				createBucket(w, r, bucketName, cfg)
-			} else if r.Method == http.MethodGet && len(path) > len(bucketName) {
-				// Liste des objets dans un bucket
-				listObjectsInBucket(w, r, bucketName, cfg)
+		case http.MethodDelete:
+			if objectName == "" {
+				deleteBucket(w, r, bucketName, cfg)
 			} else {
-				http.Error(w, "Not Found", http.StatusNotFound)
+				deleteObject(w, r, bucketName, objectName, cfg)
 			}
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
 	})
 
-	log.Println("Serveur démarré sur le port 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-// Exemple de fonction pour /telescope/requests
-func handleTelescopeRequests(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Telescope requests handled."))
-}
-
-// Exemple de fonction pour /.env
-func handleEnv(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Env file handled."))
-}
-
-// Exemple de fonction pour /favicon.ico
-func handleFavicon(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Favicon handled."))
-}
-
-// Fonction pour lister les objets dans un bucket
-func listObjectsInBucket(w http.ResponseWriter, r *http.Request, bucketName string, cfg Config) {
-	bucketPath := "./data/" + bucketName
-	entries, err := os.ReadDir(bucketPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			http.Error(w, "Bucket Not Found", http.StatusNotFound)
-			return
-		}
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		log.Printf("Erreur lors de la lecture du bucket %s : %v", bucketName, err)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/xml")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("<ListBucketResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">"))
-	w.Write([]byte("<Name>" + bucketName + "</Name>"))
-	w.Write([]byte("<Contents>"))
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			w.Write([]byte("<Object><Key>" + entry.Name() + "</Key></Object>"))
-		}
-	}
-	w.Write([]byte("</Contents></ListBucketResult>"))
+	log.Println("Serveur démarré sur le port 9000")
+	log.Fatal(http.ListenAndServe(":9000", nil))
 }
 
 // Fonction pour créer un bucket
@@ -145,4 +106,91 @@ func listBuckets(w http.ResponseWriter, r *http.Request, cfg Config) {
 		}
 	}
 	w.Write([]byte("</Buckets></ListAllMyBucketsResult>"))
+}
+
+// Fonction pour téléverser un objet dans un bucket
+func uploadObject(w http.ResponseWriter, r *http.Request, bucketName, objectName string, cfg Config) {
+	bucketPath := "./data/" + bucketName
+	objectPath := bucketPath + "/" + objectName
+
+	// Vérifier que le bucket existe
+	if _, err := os.Stat(bucketPath); os.IsNotExist(err) {
+		http.Error(w, "Bucket Not Found", http.StatusNotFound)
+		return
+	}
+
+	// Créer ou écraser l'objet
+	file, err := os.Create(objectPath)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	// Copier le contenu du corps de la requête dans l'objet
+	_, err = io.Copy(file, r.Body)
+	if err != nil {
+		http.Error(w, "Failed to upload object", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	log.Printf("Objet %s téléchargé dans le bucket %s", objectName, bucketName)
+}
+
+// Fonction pour télécharger un objet depuis un bucket
+func downloadObject(w http.ResponseWriter, r *http.Request, bucketName, objectName string, cfg Config) {
+	objectPath := "./data/" + bucketName + "/" + objectName
+
+	// Vérifier que l'objet existe
+	file, err := os.Open(objectPath)
+	if err != nil {
+		http.Error(w, "Object Not Found", http.StatusNotFound)
+		return
+	}
+	defer file.Close()
+
+	// Envoyer le fichier en réponse
+	http.ServeFile(w, r, objectPath)
+}
+
+// Fonction pour supprimer un objet dans un bucket
+func deleteObject(w http.ResponseWriter, r *http.Request, bucketName, objectName string, cfg Config) {
+	objectPath := "./data/" + bucketName + "/" + objectName
+
+	// Supprimer l'objet
+	err := os.Remove(objectPath)
+	if err != nil {
+		http.Error(w, "Object Not Found", http.StatusNotFound)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	log.Printf("Objet %s supprimé du bucket %s", objectName, bucketName)
+}
+
+// Fonction pour supprimer un bucket (uniquement s'il est vide)
+func deleteBucket(w http.ResponseWriter, r *http.Request, bucketName string, cfg Config) {
+	bucketPath := "./data/" + bucketName
+
+	// Vérifier si le bucket est vide
+	entries, err := os.ReadDir(bucketPath)
+	if err != nil {
+		http.Error(w, "Bucket Not Found", http.StatusNotFound)
+		return
+	}
+	if len(entries) > 0 {
+		http.Error(w, "Bucket Not Empty", http.StatusConflict)
+		return
+	}
+
+	// Supprimer le bucket
+	err = os.Remove(bucketPath)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	log.Printf("Bucket %s supprimé", bucketName)
 }
