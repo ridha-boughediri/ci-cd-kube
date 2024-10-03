@@ -10,3 +10,4 @@ spec:
     - protocol: TCP
       port: 9000        # Port accessible externally
       targetPort: 9000  # Port on which your pods are listening
+
