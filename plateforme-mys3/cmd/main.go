@@ -31,6 +31,15 @@ func main() {
 
 		log.Printf("Requête reçue: %s %s", r.Method, path)
 
+		// Authentification désactivée (en commentaire)
+		/*
+			accessKey := r.Header.Get("Authorization")
+			if accessKey != "Bearer "+cfg.AccessKeyID {
+				http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				return
+			}
+		*/
+
 		switch r.Method {
 		case http.MethodPut:
 			if objectName == "" {
