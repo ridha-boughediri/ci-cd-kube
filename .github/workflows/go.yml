@@ -65,8 +65,8 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f ./plateforme-mys3/deployment.yaml
-          kubectl apply -f ./plateforme-mys3/service.yaml
-          kubectl set image deployment/moto moto-container=ridhabucket/moto:latest
-          kubectl rollout status deployment/moto
+          kubectl apply -f ./plateforme-mys3/deployment.yaml --kubeconfig=~/.kube/config
+          kubectl apply -f ./plateforme-mys3/service.yaml --kubeconfig=~/.kube/config
+          kubectl set image deployment/moto moto-container=ridhabucket/moto:latest --kubeconfig=~/.kube/config
+          kubectl rollout status deployment/moto --kubeconfig=~/.kube/config
         shell: /usr/bin/bash -e {0}

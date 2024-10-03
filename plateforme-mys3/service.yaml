@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: s3-service
+spec:
+  selector:
+    app: s3  # Assurez-vous que vos pods ont le label `app=s3`
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 9000        # Port interne au cluster
+      targetPort: 9000  # Port sur lequel vos pods écoutent
+      nodePort: 32000   # Port accessible depuis l'extérieur (choisissez entre 30000-32767)
