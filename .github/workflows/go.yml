@@ -69,3 +69,4 @@ jobs:
           kubectl apply -f ./plateforme-mys3/service.yaml
           kubectl set image deployment/moto moto-container=ridhabucket/moto:latest
           kubectl rollout status deployment/moto
+        shell: /usr/bin/bash -e {0}
