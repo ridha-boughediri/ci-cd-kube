@@ -49,21 +49,21 @@ jobs:
           docker push ridhabucket/moto:latest
 
   deploy:
-  needs: build
-  runs-on: ubuntu-latest
-  steps:
-    - name: Set up Kubectl
-      uses: azure/setup-kubectl@v1
-      with:
-        version: 'v1.21.0'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Kubectl
+        uses: azure/setup-kubectl@v1
+        with:
+          version: 'v1.21.0'
 
-    - name: Create .kube directory
-      run: mkdir -p ~/.kube
+      - name: Create .kube directory
+        run: mkdir -p ~/.kube
 
-    - name: Set up Kubeconfig
-      run: echo "${{ secrets.KUBECONFIG }}" | base64 --decode > ~/.kube/config
+      - name: Set up Kubeconfig
+        run: echo "${{ secrets.KUBECONFIG }}" | base64 --decode > ~/.kube/config
 
-    - name: Deploy to Kubernetes
-      run: |
-        kubectl set image deployment/moto-deployment moto-container=ridhabucket/moto:latest
-        kubectl rollout status deployment/moto-deployment
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/moto-deployment moto-container=ridhabucket/moto:latest
+          kubectl rollout status deployment/moto-deployment
