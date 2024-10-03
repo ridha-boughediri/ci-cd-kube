@@ -31,14 +31,11 @@ func main() {
 
 		log.Printf("Requête reçue: %s %s", r.Method, path)
 
-		// Authentification désactivée (en commentaire)
-		/*
-		accessKey := r.Header.Get("Authorization")
-		if accessKey != "Bearer "+cfg.AccessKeyID {
+		// Authentification simplifiée
+		if !authenticateRequest(r, cfg) {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-		*/
 
 		switch r.Method {
 		case http.MethodPut:
@@ -59,8 +56,8 @@ func main() {
 			} else {
 				deleteObject(w, r, bucketName, objectName, cfg)
 			}
-		case http.MethodHead: // Ajout de la gestion de la méthode HEAD
-			w.WriteHeader(http.StatusOK)
+		case http.MethodHead: // Gestion de la méthode HEAD
+			handleHeadRequest(w, r, bucketName, objectName, cfg)
 		default:
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		}
@@ -69,6 +66,43 @@ func main() {
 	log.Println("Serveur démarré sur le port 9000")
 	log.Fatal(http.ListenAndServe(":9000", nil))
 }
+
+// Fonction pour authentifier les requêtes
+func authenticateRequest(r *http.Request, cfg Config) bool {
+	// Accepter toutes les requêtes avec un en-tête Authorization présent
+	authHeader := r.Header.Get("Authorization")
+	if authHeader == "" {
+		// Aucun en-tête Authorization fourni
+		return false
+	}
+
+	// Pour simplifier, accepter toutes les requêtes avec un en-tête Authorization
+	// Dans une implémentation réelle, tu devrais vérifier la signature AWS
+	return true
+}
+
+// Fonction pour gérer les requêtes HEAD
+func handleHeadRequest(w http.ResponseWriter, r *http.Request, bucketName, objectName string, cfg Config) {
+	if objectName == "" {
+		// Vérifier si le bucket existe
+		bucketPath := "./data/" + bucketName
+		if _, err := os.Stat(bucketPath); os.IsNotExist(err) {
+			http.Error(w, "Bucket Not Found", http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	} else {
+		// Vérifier si l'objet existe
+		objectPath := "./data/" + bucketName + "/" + objectName
+		if _, err := os.Stat(objectPath); os.IsNotExist(err) {
+			http.Error(w, "Object Not Found", http.StatusNotFound)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+}
+
+// Les autres fonctions restent inchangées...
 
 // Fonction pour créer un bucket
 func createBucket(w http.ResponseWriter, r *http.Request, bucketName string, cfg Config) {
@@ -145,12 +179,10 @@ func downloadObject(w http.ResponseWriter, r *http.Request, bucketName, objectNa
 	objectPath := "./data/" + bucketName + "/" + objectName
 
 	// Vérifier que l'objet existe
-	file, err := os.Open(objectPath)
-	if err != nil {
+	if _, err := os.Stat(objectPath); os.IsNotExist(err) {
 		http.Error(w, "Object Not Found", http.StatusNotFound)
 		return
 	}
-	defer file.Close()
 
 	// Envoyer le fichier en réponse
 	http.ServeFile(w, r, objectPath)
