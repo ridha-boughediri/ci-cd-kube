@@ -8,5 +8,6 @@ spec:
   type: LoadBalancer
   ports:
     - protocol: TCP
-      port: 9000        # Port exposé à l'extérieur
-      targetPort: 9000  # Port sur lequel les pods écoutent
+      port: 9000        # Port accessible externally
+      targetPort: 9000  # Port on which your pods are listening
+
