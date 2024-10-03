@@ -66,6 +66,7 @@ func main() {
 
 	log.Println("Serveur démarré sur le port 9000")
 	log.Fatal(http.ListenAndServe(":9000", nil))
+
 }
 
 // Fonction pour créer un bucket
