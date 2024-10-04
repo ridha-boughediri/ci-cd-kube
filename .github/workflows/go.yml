@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debugging - List root directory and current working directory
+      - name: Debugging - List current directory
         run: |
           pwd
           ls -la
@@ -69,17 +69,11 @@ jobs:
       - name: Set up Kubeconfig
         run: echo "${{ secrets.KUBECONFIG }}" | base64 --decode > ~/.kube/config
 
-      - name: Debugging - List current directory
+      - name: Debugging - List current directory before applying ingress
         run: |
           pwd
           ls -la
 
-      - name: Deploy to Kubernetes
-        run: |
-          kubectl set image deployment/moto moto-container=ridhabucket/moto:latest
-          kubectl rollout status deployment/moto
-
       - name: Apply Ingress
         run: |
-          kubectl apply -f ingress.yaml
-        working-directory: ./plateforme-mys3
+          kubectl apply -f ./plateforme-mys3/ingress.yaml
