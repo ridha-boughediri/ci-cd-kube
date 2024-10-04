@@ -67,3 +67,7 @@ jobs:
         run: |
           kubectl set image deployment/moto-deployment moto-container=ridhabucket/moto:latest
           kubectl rollout status deployment/moto-deployment
+
+      - name: Apply Ingress
+        run: |
+          kubectl apply -f ./ingress.yaml
