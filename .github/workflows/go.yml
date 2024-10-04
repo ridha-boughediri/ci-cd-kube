@@ -17,6 +17,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Debugging - List root directory
+        run: ls -la 
+
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
@@ -63,7 +66,10 @@ jobs:
       - name: Set up Kubeconfig
         run: echo "${{ secrets.KUBECONFIG }}" | base64 --decode > ~/.kube/config
 
-      - name: List files for debugging
+      - name: Debugging - List root directory
+        run: ls -la 
+
+      - name: List files for debugging in plateforme-mys3
         run: |
           ls -la ./plateforme-mys3
 
