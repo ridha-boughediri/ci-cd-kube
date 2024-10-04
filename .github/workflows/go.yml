@@ -21,7 +21,7 @@ jobs:
         run: |
           pwd
           ls -la
-          find . -type f -name "moto-deployment.yaml"
+          find . -type f -name "*.yaml"
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -72,3 +72,4 @@ jobs:
       - name: Apply Deployment
         run: |
           kubectl apply -f ./plateforme-mys3/moto-deployment.yaml
+          kubectl apply -f ./plateforme-mys3/service.yaml
