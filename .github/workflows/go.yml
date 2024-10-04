@@ -70,4 +70,7 @@ jobs:
 
       - name: Apply Ingress
         run: |
-          kubectl apply -f ./ingress.yaml
+          kubectl apply -f ./plateforme-mys3/ingress.yaml
+
+        
+            
