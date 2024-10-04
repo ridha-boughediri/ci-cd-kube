@@ -1,7 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: moto
+  name: moto-deployment
+  labels:
+    app: moto
 spec:
   replicas: 3
   selector:
@@ -17,10 +19,42 @@ spec:
           image: ridhabucket/moto:latest
           ports:
             - containerPort: 9000
-          resources:
-            limits:
-              cpu: 500m
-              memory: 512Mi
-            requests:
-              cpu: 250m
-              memory: 256Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: s3-service
+spec:
+  selector:
+    app: moto
+  ports:
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: s3-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: bestmoto
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: s3-service
+                port:
+                  number: 9000
+  tls:
+    - hosts:
+        - bestmoto
+      secretName: moto-cdpi-atelier-ovh-tls
