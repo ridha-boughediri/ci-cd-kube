@@ -65,5 +65,9 @@ jobs:
 
       - name: Deploy to Kubernetes
         run: |
-          kubectl set image deployment/moto-deployment moto-container=ridhabucket/moto:latest
-          kubectl rollout status deployment/moto-deployment
+          kubectl set image deployment/moto moto-container=ridhabucket/moto:latest
+          kubectl rollout status deployment/moto
+
+      - name: Apply Ingress
+        run: |
+          kubectl apply -f ./ingress.yaml
