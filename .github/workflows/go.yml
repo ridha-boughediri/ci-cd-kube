@@ -17,11 +17,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debugging - List entire directory
+      - name: Debugging - List root directory and current working directory
         run: |
           pwd
           ls -la
-          find . -type d -name "plateforme-mys3"
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -41,9 +40,9 @@ jobs:
         uses: docker/setup-buildx-action@v2
 
       - name: Build Docker image
-        working-directory: ./plateforme-mys3
         run: |
           docker build -t ridhabucket/moto:${{ github.sha }} .
+        working-directory: ./plateforme-mys3
 
       - name: Login to Docker Hub
         run: |
@@ -70,11 +69,10 @@ jobs:
       - name: Set up Kubeconfig
         run: echo "${{ secrets.KUBECONFIG }}" | base64 --decode > ~/.kube/config
 
-      - name: Debugging - List entire directory
+      - name: Debugging - List current directory
         run: |
           pwd
           ls -la
-          find . -type d -name "plateforme-mys3"
 
       - name: Deploy to Kubernetes
         run: |
@@ -82,5 +80,6 @@ jobs:
           kubectl rollout status deployment/moto
 
       - name: Apply Ingress
+        run: |
+          kubectl apply -f ingress.yaml
         working-directory: ./plateforme-mys3
-        run: kubectl apply -f ingress.yaml
