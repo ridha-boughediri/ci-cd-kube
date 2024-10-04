@@ -17,11 +17,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debugging - List root directory and subdirectories
+      - name: Debugging - List all files and directories
         run: |
           pwd
           ls -la
-          find . -type f -name "*.yaml"
+          find . -type f
 
       - name: Set up Go
         uses: actions/setup-go@v3
