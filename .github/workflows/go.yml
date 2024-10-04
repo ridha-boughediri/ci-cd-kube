@@ -17,10 +17,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debugging - List current directory
+      - name: Debugging - List root directory and all subdirectories
         run: |
           pwd
           ls -la
+          find . -type f -name "ingress.yaml"
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -28,8 +29,7 @@ jobs:
           go-version: '1.20'
 
       - name: Install dependencies
-        run: |
-          go mod download
+        run: go mod download
         working-directory: ./plateforme-mys3
 
       - name: Run tests
@@ -68,11 +68,6 @@ jobs:
 
       - name: Set up Kubeconfig
         run: echo "${{ secrets.KUBECONFIG }}" | base64 --decode > ~/.kube/config
-
-      - name: Debugging - List current directory before applying ingress
-        run: |
-          pwd
-          ls -la
 
       - name: Apply Ingress
         run: |
