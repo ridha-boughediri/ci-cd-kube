@@ -17,8 +17,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debugging - List root directory
-        run: ls -la 
+      - name: Debugging - List entire directory
+        run: |
+          pwd
+          ls -la
+          find . -type d -name "plateforme-mys3"
 
       - name: Set up Go
         uses: actions/setup-go@v3
@@ -26,12 +29,13 @@ jobs:
           go-version: '1.20'
 
       - name: Install dependencies
+        run: |
+          go mod download
         working-directory: ./plateforme-mys3
-        run: go mod download
 
       - name: Run tests
-        working-directory: ./plateforme-mys3
         run: go test ./cmd/... -v
+        working-directory: ./plateforme-mys3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -66,12 +70,11 @@ jobs:
       - name: Set up Kubeconfig
         run: echo "${{ secrets.KUBECONFIG }}" | base64 --decode > ~/.kube/config
 
-      - name: Debugging - List root directory
-        run: ls -la 
-
-      - name: List files for debugging in plateforme-mys3
+      - name: Debugging - List entire directory
         run: |
-          ls -la ./plateforme-mys3
+          pwd
+          ls -la
+          find . -type d -name "plateforme-mys3"
 
       - name: Deploy to Kubernetes
         run: |
@@ -80,5 +83,4 @@ jobs:
 
       - name: Apply Ingress
         working-directory: ./plateforme-mys3
-        run: |
-          kubectl apply -f ingress.yaml
+        run: kubectl apply -f ingress.yaml
