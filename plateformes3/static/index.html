@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bucket Management</title>
+    <script src="https://unpkg.com/htmx.org"></script>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="/static/js/script.js" defer></script>
+    
+</head>
+<body>
+    <h1>Bucket Management</h1>
+
+    <div id="bucket-list">
+        <h2>Current Buckets</h2>
+        <button hx-get="/buckets" hx-target="#bucket-list">Load Buckets</button>
+        <ul hx-swap="outerHTML">
+            <!-- Les buckets seront chargés ici -->
+        </ul>
+    </div>
+
+    <div>
+        <h2>Create a New Bucket</h2>
+        <form hx-post="/bucket" hx-target="#bucket-list">
+            <label for="bucketName">Bucket Name:</label>
+            <input type="text" id="bucketName" name="bucketName">
+            <button type="submit">Create Bucket</button>
+        </form>
+    </div>
+
+    <div>
+        <h2>Delete a Bucket</h2>
+        <form hx-delete="/bucket" hx-target="#bucket-list">
+            <label for="bucketNameDelete">Bucket Name:</label>
+            <input type="text" id="bucketNameDelete" name="bucketName">
+            <button type="submit">Delete Bucket</button>
+        </form>
+    </div>
+</body>
+</html>
